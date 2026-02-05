@@ -2,43 +2,76 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Manutenção Ar-Condicionado</title>
+<title>Manutenção de Equipamentos</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 body {
     font-family: Arial, sans-serif;
-    background: #f2f4f6;
-    margin: 0;
+    background: #f2f2f2;
+    padding: 20px;
 }
 .container {
-    max-width: 800px;
+    max-width: 600px;
     margin: auto;
     background: #fff;
     padding: 20px;
+    border-radius: 8px;
 }
-h1, h2 {
-    text-align: center;
-    color: #1e3a5f;
+input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
 }
 button {
-    width: 100%;
-    padding: 14px;
-    margin: 8px 0;
-    font-size: 16px;
+    background: #007bff;
+    color: #fff;
     border: none;
-    border-radius: 6px;
     cursor: pointer;
 }
-.btn-cliente { background: #2ecc71; color: #fff; }
-.btn-tecnico { background: #3498db; color: #fff; }
-
-.box { display: none; margin-top: 20px; }
-input, textarea { width: 100%; padding: 8px; margin: 5px 0; }
-.footer { text-align: center; font-size: 12px; color: #777; margin-top: 25px; }
+button:hover {
+    background: #0056b3;
+}
+.historico {
+    margin-top: 20px;
+    padding: 10px;
+    background: #eee;
+    border-radius: 5px;
+}
+.item {
+    background: #fff;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-left: 4px solid #007bff;
+}
 </style>
 </head>
 
+<body>
+
+<div class="container">
+    <h2>Manutenção do Equipamento</h2>
+
+    <p><b>Equipamento:</b> <span id="equipamento"></span></p>
+
+    <input type="date" id="data">
+    <input type="text" id="tecnico" placeholder="Nome do técnico">
+    <textarea id="servico" placeholder="Serviço realizado"></textarea>
+    <textarea id="observacoes" placeholder="Observações"></textarea>
+
+    <button onclick="salvarManutencao()">Salvar Manutenção</button>
+
+    <div class="historico">
+        <h3>Histórico</h3>
+        <div id="lista"></div>
+    </div>
+</div>
+
 <script>
+// 🔹 CONFIG FIREBASE (TROQUE PELO SEU)
 const firebaseConfig = {
   apiKey: "AIzaSyDD2Ydr3Z5gahJ11SfRlFMYn9OCVJ4XJQE",
   authDomain: "manutencaodear-5a2fb.firebaseapp.com",
@@ -47,156 +80,73 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-</script>
-<body>
 
-<div class="container">
-<h1>📲 Manutenção do Equipamento</h1>
+// 🔹 PEGA EQUIPAMENTO DA URL
+const params = new URLSearchParams(window.location.search);
+const eq = params.get("eq") || "SEM_CODIGO";
+document.getElementById("equipamento").innerText = eq;
 
-<div id="equipamentoInfo"></div>
-
-<button class="btn-cliente" onclick="mostrarCliente()">👤 Área do Cliente</button>
-<button class="btn-tecnico" onclick="salvarManutencao()">
-  Salvar Manutenção
-</button>
-
-
-<!-- CLIENTE -->
-<div id="cliente" class="box">
-<h2>Dados do Equipamento</h2>
-<p><strong>Modelo:</strong> <span id="modelo"></span></p>
-<p><strong>Nº de Série:</strong> <span id="serie"></span></p>
-<p><strong>Última Manutenção:</strong> <span id="ultima"></span></p>
-<p><strong>Próxima Manutenção:</strong> <span id="proxima"></span></p>
-<p><strong>Local:</strong> <span id="local"></span></p>
-</div>
-
-<!-- LOGIN -->
-<div id="login" class="box">
-<h2>Login Técnico</h2>
-<input type="password" id="senha" placeholder="Senha do técnico">
-<button class="btn-tecnico" onclick="validarSenha()">Entrar</button>
-<p id="erro" style="color:red;"></p>
-</div>
-
-<!-- TÉCNICO -->
-<div id="tecnico" class="box">
-<h2>Registro Técnico</h2>
-<input type="date">
-<textarea rows="3" placeholder="Serviço realizado"></textarea>
-<textarea rows="2" placeholder="Peças substituídas"></textarea>
-<textarea rows="3" placeholder="Observações técnicas"></textarea>
-<button class="btn-tecnico">Salvar (visual)</button>
-</div>
-<input type="date" id="data">
-<input type="text" id="tecnico" placeholder="Nome do técnico">
-
-<textarea id="servico" placeholder="Serviço realizado"></textarea>
-<textarea id="observacoes" placeholder="Observações"></textarea>
-
-<div class="footer">
-Sistema de manutenção por QR Code
-</div>
-</div>
-
-<script>
+// 🔹 SALVAR MANUTENÇÃO
 function salvarManutencao() {
-    console.log("Botão clicado"); // DEBUG
-
     const data = document.getElementById("data").value;
     const tecnico = document.getElementById("tecnico").value;
     const servico = document.getElementById("servico").value;
     const observacoes = document.getElementById("observacoes").value;
 
     if (!data || !tecnico || !servico) {
-        alert("Preencha todos os campos obrigatórios");
+        alert("Preencha data, técnico e serviço");
         return;
     }
 
     db.collection("equipamentos")
-      .doc(eq) // vem do QR Code ?eq=001
+      .doc(eq)
       .collection("historico")
       .add({
-          data: data,
-          tecnico: tecnico,
-          servico: servico,
-          observacoes: observacoes,
+          data,
+          tecnico,
+          servico,
+          observacoes,
           criadoEm: new Date()
       })
       .then(() => {
           alert("✅ Manutenção salva!");
-          carregarHistorico(); // atualiza lista
+          carregarHistorico();
+          document.getElementById("servico").value = "";
+          document.getElementById("observacoes").value = "";
       })
-      .catch((error) => {
-          alert("❌ Erro ao salvar");
-          console.error(error);
+      .catch((erro) => {
+          alert("Erro ao salvar");
+          console.error(erro);
       });
 }
-// "Banco de dados" simples
-const equipamentos = {
-    "001": {
-        modelo: "Split 12.000 BTUs",
-        serie: "AC001",
-        ultima: "10/01/2026",
-        proxima: "10/07/2026",
-        local: "Sala 01"
-    },
-    "002": {
-        modelo: "Split 18.000 BTUs",
-        serie: "AC002",
-        ultima: "05/12/2025",
-        proxima: "05/06/2026",
-        local: "luiz claudio Belvedere"
-    },
-    
-    "003": {
-        modelo: "Cassete 24.000 BTUs",
-        serie: "AC003",
-        ultima: "20/11/2025",
-        proxima: "20/05/2026",
-        local: "Auditório"
-    }
-};
 
-// Lê o código do equipamento da URL
-const params = new URLSearchParams(window.location.search);
-const eq = params.get("eq");
+// 🔹 CARREGAR HISTÓRICO
+function carregarHistorico() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
 
-// Carrega dados
-if (eq && equipamentos[eq]) {
-    const e = equipamentos[eq];
-    document.getElementById("modelo").innerText = e.modelo;
-    document.getElementById("serie").innerText = e.serie;
-    document.getElementById("ultima").innerText = e.ultima;
-    document.getElementById("proxima").innerText = e.proxima;
-    document.getElementById("local").innerText = e.local;
-} else {
-    document.getElementById("equipamentoInfo").innerHTML =
-        "<p style='color:red;text-align:center;'>Equipamento não identificado</p>";
+    db.collection("equipamentos")
+      .doc(eq)
+      .collection("historico")
+      .orderBy("criadoEm", "desc")
+      .get()
+      .then((query) => {
+          query.forEach((doc) => {
+              const d = doc.data();
+              lista.innerHTML += `
+                <div class="item">
+                    <b>${d.data}</b><br>
+                    Técnico: ${d.tecnico}<br>
+                    Serviço: ${d.servico}<br>
+                    Obs: ${d.observacoes || "-"}
+                </div>
+              `;
+          });
+      });
 }
 
-// Funções de tela
-function mostrarCliente() {
-    esconderTudo();
-    document.getElementById("cliente").style.display = "block";
-}
-function mostrarLogin() {
-    esconderTudo();
-    document.getElementById("login").style.display = "block";
-}
-function validarSenha() {
-    if (document.getElementById("senha").value === "211710") {
-        esconderTudo();
-        document.getElementById("tecnico").style.display = "block";
-    } else {
-        document.getElementById("erro").innerText = "Senha incorreta";
-    }
-}
-function esconderTudo() {
-    ["cliente","login","tecnico"].forEach(id => {
-        document.getElementById(id).style.display = "none";
-    });
-}
+// 🔹 CARREGA AO ABRIR
+carregarHistorico();
 </script>
 
 </body>
