@@ -6,7 +6,6 @@
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
@@ -17,6 +16,7 @@ button{background:#007bff;color:#fff;border:none;cursor:pointer}
 button:hover{background:#0056b3}
 .hidden{display:none}
 .item{background:#eee;padding:10px;margin-top:10px;border-left:4px solid #007bff}
+hr{margin:20px 0}
 </style>
 </head>
 
@@ -26,15 +26,14 @@ button:hover{background:#0056b3}
 <h2>Manutenção de Ar-Condicionado</h2>
 <p><b>Equipamento:</b> <span id="equipamento"></span></p>
 
-<!-- LOGIN TÉCNICO -->
-<div id="loginBox">
-<h3>Login Técnico</h3>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="senha" placeholder="Senha">
-<button onclick="login()">Entrar</button>
+<!-- 🔑 LOGIN TÉCNICO (SÓ SENHA) -->
+<div id="loginTecnico">
+<h3>Acesso Técnico</h3>
+<input type="password" id="senhaTecnico" placeholder="Senha do técnico">
+<button onclick="entrarTecnico()">Entrar</button>
 </div>
 
-<!-- ÁREA DO TÉCNICO -->
+<!-- 🔧 ÁREA DO TÉCNICO -->
 <div id="areaTecnico" class="hidden">
 <h3>Registrar Manutenção</h3>
 <input type="date" id="data">
@@ -42,51 +41,52 @@ button:hover{background:#0056b3}
 <textarea id="servico" placeholder="Serviço realizado"></textarea>
 <textarea id="obs" placeholder="Observações"></textarea>
 <button onclick="salvar()">Salvar Manutenção</button>
-<button onclick="logout()">Sair</button>
+<button onclick="sairTecnico()">Sair</button>
 </div>
 
 <hr>
 
-<!-- ÁREA DO CLIENTE -->
+<!-- 👁️ ÁREA DO CLIENTE -->
 <h3>Histórico de Manutenção</h3>
 <div id="lista"></div>
 
 </div>
 
 <script>
-// 🔥 CONFIG FIREBASE (TROQUE PELO SEU)
+// 🔥 CONFIG FIREBASE (TROQUE!)
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  projectId: "SEU_PROJETO"
+  apiKey: "AIzaSyDD2Ydr3Z5gahJ11SfRlFMYn9OCVJ4XJQE",
+  authDomain: "manutencaodear-5a2fb.firebaseapp.com",
+  projectId: "manutencaodear-5a2fb"
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 📦 EQUIPAMENTO VIA QR
+// 🔐 SENHA DO TÉCNICO (VOCÊ DEFINE)
+const SENHA_TECNICO = "211710"; // troque aqui
+
+// 📦 EQUIPAMENTO VIA QR CODE
 const params = new URLSearchParams(window.location.search);
 const eq = params.get("eq") || "SEM_CODIGO";
 document.getElementById("equipamento").innerText = eq;
 
-// 🔐 LOGIN
-function login(){
-  auth.signInWithEmailAndPassword(email.value, senha.value)
-  .catch(e => alert(e.message));
-}
-function logout(){ auth.signOut(); }
-
-// 🔄 CONTROLE DE ACESSO
-auth.onAuthStateChanged(user=>{
-  if(user){
-    loginBox.style.display="none";
+// 🔑 ENTRAR COMO TÉCNICO
+function entrarTecnico(){
+  if(senhaTecnico.value === SENHA_TECNICO){
+    loginTecnico.style.display="none";
     areaTecnico.classList.remove("hidden");
+    senhaTecnico.value="";
   }else{
-    loginBox.style.display="block";
-    areaTecnico.classList.add("hidden");
+    alert("Senha incorreta");
   }
-});
+}
+
+// 🚪 SAIR
+function sairTecnico(){
+  loginTecnico.style.display="block";
+  areaTecnico.classList.add("hidden");
+}
 
 // 💾 SALVAR MANUTENÇÃO
 function salvar(){
@@ -110,7 +110,8 @@ function salvar(){
       servico.value="";
       obs.value="";
       carregar();
-    });
+    })
+    .catch(e=>alert("Erro ao salvar"));
 }
 
 // 📜 CARREGAR HISTÓRICO
@@ -134,6 +135,7 @@ function carregar(){
       });
     });
 }
+
 carregar();
 </script>
 
