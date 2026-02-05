@@ -10,91 +10,87 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body { font-family: Arial; background:#f2f2f2; padding:20px; }
-.box { background:#fff; padding:20px; max-width:600px; margin:auto; border-radius:8px; }
-input, textarea, button { width:100%; padding:10px; margin-top:10px; }
-button { background:#007bff; color:#fff; border:none; cursor:pointer; }
-button:hover { background:#0056b3; }
-.hidden { display:none; }
-.item { background:#eee; padding:10px; margin-top:10px; border-left:4px solid #007bff; }
+body{font-family:Arial;background:#f2f2f2;padding:20px}
+.box{background:#fff;max-width:600px;margin:auto;padding:20px;border-radius:8px}
+input,textarea,button{width:100%;padding:10px;margin-top:10px}
+button{background:#007bff;color:#fff;border:none;cursor:pointer}
+button:hover{background:#0056b3}
+.hidden{display:none}
+.item{background:#eee;padding:10px;margin-top:10px;border-left:4px solid #007bff}
 </style>
 </head>
 
 <body>
-
 <div class="box">
-<h2>Manutenção de Equipamento</h2>
+
+<h2>Manutenção de Ar-Condicionado</h2>
 <p><b>Equipamento:</b> <span id="equipamento"></span></p>
 
 <!-- LOGIN TÉCNICO -->
 <div id="loginBox">
-  <h3>Login Técnico</h3>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="senha" placeholder="Senha">
-  <button onclick="login()">Entrar</button>
+<h3>Login Técnico</h3>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="senha" placeholder="Senha">
+<button onclick="login()">Entrar</button>
 </div>
 
-<!-- ÁREA TÉCNICO -->
+<!-- ÁREA DO TÉCNICO -->
 <div id="areaTecnico" class="hidden">
-  <h3>Registrar Manutenção</h3>
-  <input type="date" id="data">
-  <input type="text" id="tecnico" placeholder="Nome do técnico">
-  <textarea id="servico" placeholder="Serviço realizado"></textarea>
-  <textarea id="obs" placeholder="Observações"></textarea>
-  <button onclick="salvar()">Salvar Manutenção</button>
-  <button onclick="logout()">Sair</button>
+<h3>Registrar Manutenção</h3>
+<input type="date" id="data">
+<input type="text" id="tecnico" placeholder="Nome do técnico">
+<textarea id="servico" placeholder="Serviço realizado"></textarea>
+<textarea id="obs" placeholder="Observações"></textarea>
+<button onclick="salvar()">Salvar Manutenção</button>
+<button onclick="logout()">Sair</button>
 </div>
 
 <hr>
 
-<!-- ÁREA CLIENTE -->
+<!-- ÁREA DO CLIENTE -->
 <h3>Histórico de Manutenção</h3>
 <div id="lista"></div>
 
 </div>
 
 <script>
-// 🔧 CONFIG FIREBASE (TROQUE!)
+// 🔥 CONFIG FIREBASE (TROQUE PELO SEU)
 const firebaseConfig = {
-  apiKey: "AIzaSyDD2Ydr3Z5gahJ11SfRlFMYn9OCVJ4XJQE",
-  authDomain: "manutencaodear-5a2fb.firebaseapp.com",
-  projectId: "manutencaodear-5a2fb"
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  projectId: "SEU_PROJETO"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 📦 EQUIPAMENTO VIA QR CODE
+// 📦 EQUIPAMENTO VIA QR
 const params = new URLSearchParams(window.location.search);
 const eq = params.get("eq") || "SEM_CODIGO";
 document.getElementById("equipamento").innerText = eq;
 
 // 🔐 LOGIN
 function login(){
-  auth.signInWithEmailAndPassword(
-    email.value, senha.value
-  ).catch(err => alert(err.message));
+  auth.signInWithEmailAndPassword(email.value, senha.value)
+  .catch(e => alert(e.message));
 }
+function logout(){ auth.signOut(); }
 
-function logout(){
-  auth.signOut();
-}
-
-// 🔄 CONTROLE DE LOGIN
-auth.onAuthStateChanged(user => {
+// 🔄 CONTROLE DE ACESSO
+auth.onAuthStateChanged(user=>{
   if(user){
-    loginBox.style.display = "none";
+    loginBox.style.display="none";
     areaTecnico.classList.remove("hidden");
-  } else {
-    loginBox.style.display = "block";
+  }else{
+    loginBox.style.display="block";
     areaTecnico.classList.add("hidden");
   }
 });
 
 // 💾 SALVAR MANUTENÇÃO
 function salvar(){
-  if(!data.value || !tecnico.value || !servico.value){
+  if(!data.value||!tecnico.value||!servico.value){
     alert("Preencha os campos obrigatórios");
     return;
   }
@@ -103,43 +99,41 @@ function salvar(){
     .doc(eq)
     .collection("historico")
     .add({
-      data: data.value,
-      tecnico: tecnico.value,
-      servico: servico.value,
-      obs: obs.value,
-      criadoEm: new Date()
+      data:data.value,
+      tecnico:tecnico.value,
+      servico:servico.value,
+      obs:obs.value,
+      criadoEm:new Date()
     })
-    .then(() => {
+    .then(()=>{
       alert("✅ Manutenção salva");
-      servico.value = "";
-      obs.value = "";
+      servico.value="";
+      obs.value="";
       carregar();
     });
 }
 
 // 📜 CARREGAR HISTÓRICO
 function carregar(){
-  lista.innerHTML = "";
+  lista.innerHTML="";
   db.collection("equipamentos")
     .doc(eq)
     .collection("historico")
     .orderBy("criadoEm","desc")
     .get()
-    .then(res => {
-      res.forEach(doc => {
-        const d = doc.data();
-        lista.innerHTML += `
-          <div class="item">
-            <b>${d.data}</b><br>
-            Técnico: ${d.tecnico}<br>
-            Serviço: ${d.servico}<br>
-            Obs: ${d.obs || "-"}
-          </div>
-        `;
+    .then(q=>{
+      q.forEach(doc=>{
+        const d=doc.data();
+        lista.innerHTML+=`
+        <div class="item">
+          <b>${d.data}</b><br>
+          Técnico: ${d.tecnico}<br>
+          Serviço: ${d.servico}<br>
+          Obs: ${d.obs||"-"}
+        </div>`;
       });
     });
 }
-
 carregar();
 </script>
 
