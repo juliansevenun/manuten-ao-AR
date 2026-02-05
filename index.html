@@ -3,89 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <title>Manutenção Ar-Condicionado</title>
+
 <style>
 body {
     font-family: Arial, sans-serif;
-    background: #f4f6f8;
+    background: #f2f4f6;
     margin: 0;
-    padding: 0;
 }
-
 .container {
     max-width: 800px;
     margin: auto;
     background: #fff;
     padding: 20px;
 }
-
 h1, h2 {
     text-align: center;
     color: #1e3a5f;
 }
-
 button {
     width: 100%;
-    padding: 15px;
-    margin: 10px 0;
+    padding: 14px;
+    margin: 8px 0;
     font-size: 16px;
-    cursor: pointer;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
+    cursor: pointer;
 }
+.btn-cliente { background: #2ecc71; color: #fff; }
+.btn-tecnico { background: #3498db; color: #fff; }
 
-.btn-cliente {
-    background: #2ecc71;
-    color: #fff;
-}
-
-.btn-tecnico {
-    background: #3498db;
-    color: #fff;
-}
-
-.box {
-    display: none;
-    margin-top: 20px;
-}
-
-input, textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 5px 0;
-}
-
-.footer {
-    text-align: center;
-    font-size: 12px;
-    color: #777;
-    margin-top: 30px;
-}
+.box { display: none; margin-top: 20px; }
+input, textarea { width: 100%; padding: 8px; margin: 5px 0; }
+.footer { text-align: center; font-size: 12px; color: #777; margin-top: 25px; }
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<h1>📲 Registro de Manutenção</h1>
+<h1>📲 Manutenção do Equipamento</h1>
+
+<div id="equipamentoInfo"></div>
 
 <button class="btn-cliente" onclick="mostrarCliente()">👤 Área do Cliente</button>
 <button class="btn-tecnico" onclick="mostrarLogin()">🔧 Área do Técnico</button>
 
 <!-- CLIENTE -->
 <div id="cliente" class="box">
-<h2>Informações do Equipamento</h2>
-<p><strong>Modelo:</strong> Split 12.000 BTUs</p>
-<p><strong>Nº de Série:</strong> AC123456</p>
-<p><strong>Última Manutenção:</strong> 10/01/2026</p>
-<p><strong>Próxima Manutenção:</strong> 10/07/2026</p>
-<p><strong>Empresa:</strong> Refrigeração Mestre</p>
-<p><strong>Contato:</strong> (24) 999074376</p>
+<h2>Dados do Equipamento</h2>
+<p><strong>Modelo:</strong> <span id="modelo"></span></p>
+<p><strong>Nº de Série:</strong> <span id="serie"></span></p>
+<p><strong>Última Manutenção:</strong> <span id="ultima"></span></p>
+<p><strong>Próxima Manutenção:</strong> <span id="proxima"></span></p>
+<p><strong>Local:</strong> <span id="local"></span></p>
 </div>
 
-<!-- LOGIN TÉCNICO -->
+<!-- LOGIN -->
 <div id="login" class="box">
 <h2>Login Técnico</h2>
-<input type="password" id="senha" placeholder="Digite a senha">
+<input type="password" id="senha" placeholder="Senha do técnico">
 <button class="btn-tecnico" onclick="validarSenha()">Entrar</button>
 <p id="erro" style="color:red;"></p>
 </div>
@@ -93,55 +69,82 @@ input, textarea {
 <!-- TÉCNICO -->
 <div id="tecnico" class="box">
 <h2>Registro Técnico</h2>
-
-<label>Data da manutenção</label>
 <input type="date">
-
-<label>Serviço realizado</label>
-<textarea rows="3"></textarea>
-
-<label>Peças substituídas</label>
-<textarea rows="2"></textarea>
-
-<label>Observações técnicas</label>
-<textarea rows="3"></textarea>
-
-<button class="btn-tecnico">Salvar Registro</button>
+<textarea rows="3" placeholder="Serviço realizado"></textarea>
+<textarea rows="2" placeholder="Peças substituídas"></textarea>
+<textarea rows="3" placeholder="Observações técnicas"></textarea>
+<button class="btn-tecnico">Salvar (visual)</button>
 </div>
 
 <div class="footer">
-QR Code de Manutenção • Sistema simples
+Sistema de manutenção por QR Code
 </div>
-
 </div>
 
 <script>
+// "Banco de dados" simples
+const equipamentos = {
+    "001": {
+        modelo: "Split 12.000 BTUs",
+        serie: "AC001",
+        ultima: "10/01/2026",
+        proxima: "10/07/2026",
+        local: "Sala 01"
+    },
+    "002": {
+        modelo: "Split 18.000 BTUs",
+        serie: "AC002",
+        ultima: "05/12/2025",
+        proxima: "05/06/2026",
+        local: "Recepção"
+    },
+    "003": {
+        modelo: "Cassete 24.000 BTUs",
+        serie: "AC003",
+        ultima: "20/11/2025",
+        proxima: "20/05/2026",
+        local: "Auditório"
+    }
+};
+
+// Lê o código do equipamento da URL
+const params = new URLSearchParams(window.location.search);
+const eq = params.get("eq");
+
+// Carrega dados
+if (eq && equipamentos[eq]) {
+    const e = equipamentos[eq];
+    document.getElementById("modelo").innerText = e.modelo;
+    document.getElementById("serie").innerText = e.serie;
+    document.getElementById("ultima").innerText = e.ultima;
+    document.getElementById("proxima").innerText = e.proxima;
+    document.getElementById("local").innerText = e.local;
+} else {
+    document.getElementById("equipamentoInfo").innerHTML =
+        "<p style='color:red;text-align:center;'>Equipamento não identificado</p>";
+}
+
+// Funções de tela
 function mostrarCliente() {
     esconderTudo();
     document.getElementById("cliente").style.display = "block";
 }
-
 function mostrarLogin() {
     esconderTudo();
     document.getElementById("login").style.display = "block";
 }
-
 function validarSenha() {
-    const senhaCorreta = "211710"; // TROQUE ESSA SENHA
-    const senha = document.getElementById("senha").value;
-
-    if (senha === senhaCorreta) {
+    if (document.getElementById("senha").value === "211710") {
         esconderTudo();
         document.getElementById("tecnico").style.display = "block";
     } else {
-        document.getElementById("erro").innerText = "Senha incorreta!";
+        document.getElementById("erro").innerText = "Senha incorreta";
     }
 }
-
 function esconderTudo() {
-    document.getElementById("cliente").style.display = "none";
-    document.getElementById("login").style.display = "none";
-    document.getElementById("tecnico").style.display = "none";
+    ["cliente","login","tecnico"].forEach(id => {
+        document.getElementById(id).style.display = "none";
+    });
 }
 </script>
 
