@@ -2,147 +2,145 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Manutenção Ar-Condicionado</title>
+<title>Manutenção de Ar-Condicionado</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    max-width: 800px;
-    margin: auto;
-    background: #fff;
-    padding: 20px;
-}
-
-h1, h2 {
-    text-align: center;
-    color: #1e3a5f;
-}
-
-button {
-    width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-}
-
-.btn-cliente {
-    background: #2ecc71;
-    color: #fff;
-}
-
-.btn-tecnico {
-    background: #3498db;
-    color: #fff;
-}
-
-.box {
-    display: none;
-    margin-top: 20px;
-}
-
-input, textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 5px 0;
-}
-
-.footer {
-    text-align: center;
-    font-size: 12px;
-    color: #777;
-    margin-top: 30px;
-}
+body { font-family: Arial; background:#f2f2f2; padding:20px; }
+.box { background:#fff; padding:20px; max-width:600px; margin:auto; border-radius:8px; }
+input, textarea, button { width:100%; padding:10px; margin-top:10px; }
+button { background:#007bff; color:#fff; border:none; cursor:pointer; }
+button:hover { background:#0056b3; }
+.hidden { display:none; }
+.item { background:#eee; padding:10px; margin-top:10px; border-left:4px solid #007bff; }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-<h1>📲 Registro de Manutenção</h1>
-
-<button class="btn-cliente" onclick="mostrarCliente()">👤 Área do Cliente</button>
-<button class="btn-tecnico" onclick="mostrarLogin()">🔧 Área do Técnico</button>
-
-<!-- CLIENTE -->
-<div id="cliente" class="box">
-<h2>Informações do Equipamento</h2>
-<p><strong>Modelo:</strong> Split 12.000 BTUs</p>
-<p><strong>Nº de Série:</strong> AC123456</p>
-<p><strong>Última Manutenção:</strong> 10/01/2026</p>
-<p><strong>Próxima Manutenção:</strong> 10/07/2026</p>
-<p><strong>Empresa:</strong> Refrigeração Mestre</p>
-<p><strong>Contato:</strong> (24) 999074376</p>
-</div>
+<div class="box">
+<h2>Manutenção de Equipamento</h2>
+<p><b>Equipamento:</b> <span id="equipamento"></span></p>
 
 <!-- LOGIN TÉCNICO -->
-<div id="login" class="box">
-<h2>Login Técnico</h2>
-<input type="password" id="senha" placeholder="Digite a senha">
-<button class="btn-tecnico" onclick="validarSenha()">Entrar</button>
-<p id="erro" style="color:red;"></p>
+<div id="loginBox">
+  <h3>Login Técnico</h3>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="senha" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
 </div>
 
-<!-- TÉCNICO -->
-<div id="tecnico" class="box">
-<h2>Registro Técnico</h2>
-
-<label>Data da manutenção</label>
-<input type="date">
-
-<label>Serviço realizado</label>
-<textarea rows="3"></textarea>
-
-<label>Peças substituídas</label>
-<textarea rows="2"></textarea>
-
-<label>Observações técnicas</label>
-<textarea rows="3"></textarea>
-
-<button class="btn-tecnico">Salvar Registro</button>
+<!-- ÁREA TÉCNICO -->
+<div id="areaTecnico" class="hidden">
+  <h3>Registrar Manutenção</h3>
+  <input type="date" id="data">
+  <input type="text" id="tecnico" placeholder="Nome do técnico">
+  <textarea id="servico" placeholder="Serviço realizado"></textarea>
+  <textarea id="obs" placeholder="Observações"></textarea>
+  <button onclick="salvar()">Salvar Manutenção</button>
+  <button onclick="logout()">Sair</button>
 </div>
 
-<div class="footer">
-QR Code de Manutenção • Sistema simples
-</div>
+<hr>
+
+<!-- ÁREA CLIENTE -->
+<h3>Histórico de Manutenção</h3>
+<div id="lista"></div>
 
 </div>
 
 <script>
-function mostrarCliente() {
-    esconderTudo();
-    document.getElementById("cliente").style.display = "block";
+// 🔧 CONFIG FIREBASE (TROQUE!)
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  projectId: "SEU_PROJETO"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// 📦 EQUIPAMENTO VIA QR CODE
+const params = new URLSearchParams(window.location.search);
+const eq = params.get("eq") || "SEM_CODIGO";
+document.getElementById("equipamento").innerText = eq;
+
+// 🔐 LOGIN
+function login(){
+  auth.signInWithEmailAndPassword(
+    email.value, senha.value
+  ).catch(err => alert(err.message));
 }
 
-function mostrarLogin() {
-    esconderTudo();
-    document.getElementById("login").style.display = "block";
+function logout(){
+  auth.signOut();
 }
 
-function validarSenha() {
-    const senhaCorreta = "211710"; // TROQUE ESSA SENHA
-    const senha = document.getElementById("senha").value;
+// 🔄 CONTROLE DE LOGIN
+auth.onAuthStateChanged(user => {
+  if(user){
+    loginBox.style.display = "none";
+    areaTecnico.classList.remove("hidden");
+  } else {
+    loginBox.style.display = "block";
+    areaTecnico.classList.add("hidden");
+  }
+});
 
-    if (senha === senhaCorreta) {
-        esconderTudo();
-        document.getElementById("tecnico").style.display = "block";
-    } else {
-        document.getElementById("erro").innerText = "Senha incorreta!";
-    }
+// 💾 SALVAR MANUTENÇÃO
+function salvar(){
+  if(!data.value || !tecnico.value || !servico.value){
+    alert("Preencha os campos obrigatórios");
+    return;
+  }
+
+  db.collection("equipamentos")
+    .doc(eq)
+    .collection("historico")
+    .add({
+      data: data.value,
+      tecnico: tecnico.value,
+      servico: servico.value,
+      obs: obs.value,
+      criadoEm: new Date()
+    })
+    .then(() => {
+      alert("✅ Manutenção salva");
+      servico.value = "";
+      obs.value = "";
+      carregar();
+    });
 }
 
-function esconderTudo() {
-    document.getElementById("cliente").style.display = "none";
-    document.getElementById("login").style.display = "none";
-    document.getElementById("tecnico").style.display = "none";
+// 📜 CARREGAR HISTÓRICO
+function carregar(){
+  lista.innerHTML = "";
+  db.collection("equipamentos")
+    .doc(eq)
+    .collection("historico")
+    .orderBy("criadoEm","desc")
+    .get()
+    .then(res => {
+      res.forEach(doc => {
+        const d = doc.data();
+        lista.innerHTML += `
+          <div class="item">
+            <b>${d.data}</b><br>
+            Técnico: ${d.tecnico}<br>
+            Serviço: ${d.servico}<br>
+            Obs: ${d.obs || "-"}
+          </div>
+        `;
+      });
+    });
 }
+
+carregar();
 </script>
 
 </body>
