@@ -2,50 +2,63 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Manutenção de Equipamentos</title>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
+<title>Manutenção Ar-Condicionado</title>
 <style>
 body {
     font-family: Arial, sans-serif;
-    background: #f2f2f2;
-    padding: 20px;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 0;
 }
+
 .container {
-    max-width: 600px;
+    max-width: 800px;
     margin: auto;
     background: #fff;
     padding: 20px;
-    border-radius: 8px;
 }
-input, textarea, button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
+
+h1, h2 {
+    text-align: center;
+    color: #1e3a5f;
 }
+
 button {
-    background: #007bff;
-    color: #fff;
-    border: none;
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 16px;
     cursor: pointer;
-}
-button:hover {
-    background: #0056b3;
-}
-.historico {
-    margin-top: 20px;
-    padding: 10px;
-    background: #eee;
+    border: none;
     border-radius: 5px;
 }
-.item {
-    background: #fff;
-    padding: 8px;
-    margin-bottom: 8px;
-    border-left: 4px solid #007bff;
+
+.btn-cliente {
+    background: #2ecc71;
+    color: #fff;
+}
+
+.btn-tecnico {
+    background: #3498db;
+    color: #fff;
+}
+
+.box {
+    display: none;
+    margin-top: 20px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+.footer {
+    text-align: center;
+    font-size: 12px;
+    color: #777;
+    margin-top: 30px;
 }
 </style>
 </head>
@@ -53,100 +66,83 @@ button:hover {
 <body>
 
 <div class="container">
-    <h2>Manutenção do Equipamento</h2>
+<h1>📲 Registro de Manutenção</h1>
 
-    <p><b>Equipamento:</b> <span id="equipamento"></span></p>
+<button class="btn-cliente" onclick="mostrarCliente()">👤 Área do Cliente</button>
+<button class="btn-tecnico" onclick="mostrarLogin()">🔧 Área do Técnico</button>
 
-    <input type="date" id="data">
-    <input type="text" id="tecnico" placeholder="Nome do técnico">
-    <textarea id="servico" placeholder="Serviço realizado"></textarea>
-    <textarea id="observacoes" placeholder="Observações"></textarea>
+<!-- CLIENTE -->
+<div id="cliente" class="box">
+<h2>Informações do Equipamento</h2>
+<p><strong>Modelo:</strong> Split 12.000 BTUs</p>
+<p><strong>Nº de Série:</strong> AC123456</p>
+<p><strong>Última Manutenção:</strong> 10/01/2026</p>
+<p><strong>Próxima Manutenção:</strong> 10/07/2026</p>
+<p><strong>Empresa:</strong> Refrigeração Mestre</p>
+<p><strong>Contato:</strong> (24) 999074376</p>
+</div>
 
-    <button onclick="salvarManutencao()">Salvar Manutenção</button>
+<!-- LOGIN TÉCNICO -->
+<div id="login" class="box">
+<h2>Login Técnico</h2>
+<input type="password" id="senha" placeholder="Digite a senha">
+<button class="btn-tecnico" onclick="validarSenha()">Entrar</button>
+<p id="erro" style="color:red;"></p>
+</div>
 
-    <div class="historico">
-        <h3>Histórico</h3>
-        <div id="lista"></div>
-    </div>
+<!-- TÉCNICO -->
+<div id="tecnico" class="box">
+<h2>Registro Técnico</h2>
+
+<label>Data da manutenção</label>
+<input type="date">
+
+<label>Serviço realizado</label>
+<textarea rows="3"></textarea>
+
+<label>Peças substituídas</label>
+<textarea rows="2"></textarea>
+
+<label>Observações técnicas</label>
+<textarea rows="3"></textarea>
+
+<button class="btn-tecnico">Salvar Registro</button>
+</div>
+
+<div class="footer">
+QR Code de Manutenção • Sistema simples
+</div>
+
 </div>
 
 <script>
-// 🔹 CONFIG FIREBASE (TROQUE PELO SEU)
-const firebaseConfig = {
-  apiKey: "AIzaSyDD2Ydr3Z5gahJ11SfRlFMYn9OCVJ4XJQE",
-  authDomain: "manutencaodear-5a2fb.firebaseapp.com",
-  projectId: "manutencaodear-5a2fb"
-};
+function mostrarCliente() {
+    esconderTudo();
+    document.getElementById("cliente").style.display = "block";
+}
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+function mostrarLogin() {
+    esconderTudo();
+    document.getElementById("login").style.display = "block";
+}
 
-// 🔹 PEGA EQUIPAMENTO DA URL
-const params = new URLSearchParams(window.location.search);
-const eq = params.get("eq") || "SEM_CODIGO";
-document.getElementById("equipamento").innerText = eq;
+function validarSenha() {
+    const senhaCorreta = "211710"; // TROQUE ESSA SENHA
+    const senha = document.getElementById("senha").value;
 
-// 🔹 SALVAR MANUTENÇÃO
-function salvarManutencao() {
-    const data = document.getElementById("data").value;
-    const tecnico = document.getElementById("tecnico").value;
-    const servico = document.getElementById("servico").value;
-    const observacoes = document.getElementById("observacoes").value;
-
-    if (!data || !tecnico || !servico) {
-        alert("Preencha data, técnico e serviço");
-        return;
+    if (senha === senhaCorreta) {
+        esconderTudo();
+        document.getElementById("tecnico").style.display = "block";
+    } else {
+        document.getElementById("erro").innerText = "Senha incorreta!";
     }
-
-    db.collection("equipamentos")
-      .doc(eq)
-      .collection("historico")
-      .add({
-          data,
-          tecnico,
-          servico,
-          observacoes,
-          criadoEm: new Date()
-      })
-      .then(() => {
-          alert("✅ Manutenção salva!");
-          carregarHistorico();
-          document.getElementById("servico").value = "";
-          document.getElementById("observacoes").value = "";
-      })
-      .catch((erro) => {
-          alert("Erro ao salvar");
-          console.error(erro);
-      });
 }
 
-// 🔹 CARREGAR HISTÓRICO
-function carregarHistorico() {
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "";
-
-    db.collection("equipamentos")
-      .doc(eq)
-      .collection("historico")
-      .orderBy("criadoEm", "desc")
-      .get()
-      .then((query) => {
-          query.forEach((doc) => {
-              const d = doc.data();
-              lista.innerHTML += `
-                <div class="item">
-                    <b>${d.data}</b><br>
-                    Técnico: ${d.tecnico}<br>
-                    Serviço: ${d.servico}<br>
-                    Obs: ${d.observacoes || "-"}
-                </div>
-              `;
-          });
-      });
+function esconderTudo() {
+    document.getElementById("cliente").style.display = "none";
+    document.getElementById("login").style.display = "none";
+    document.getElementById("tecnico").style.display = "none";
 }
-
-// 🔹 CARREGA AO ABRIR
-carregarHistorico();
 </script>
 
 </body>
